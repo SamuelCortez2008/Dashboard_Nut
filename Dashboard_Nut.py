@@ -32,10 +32,10 @@ EDAMAM_consulta = EDAMAM_.Edamam_mcd(id_nutrition=nutrition_appid,
                                      id_food=food_appid,
                                      key_food=food_appkey)
 
-# Ejercución de los métodos de cada una de las API's para realizar consultas
+# Ejercución el método de la API de Recipe Search para realizar consultas de alimentos
 Response_Recipe = EDAMAM_consulta.Search_recipe(query= 'salad')
 
-# Ejecución de los métodos para obtener los dataframe con los resultados para cada una de las API's
+# Ejecución del metodo que retorna los dataframes ya procesados de la consulta a la API Recipe Search 
 EDAMAM_consulta.ingredients_table()
 
 
@@ -50,8 +50,11 @@ app = dash.Dash(
     external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.title = "Análisis Nutricional"
+# Se define el server de la aplicación
 server = app.server
 
+
+# Se define diccionario con los colores del texto y background
 colors = {
     'background': '#C6D500',
     'text':'#111111',
@@ -64,6 +67,7 @@ fig.update_layout(
     font_color = colors['text']
 )
 
+# Se inicializan los ingredientes
 ingredients = [{'label': 'Zuni-Inspired Grilled Chicken Salad','value': 'Zuni-Inspired Grilled Chicken Salad'},
                {'label': 'Steak & Chips Salad', 'value': 'Steak & Chips Salad'},
                {'label': 'Shrimp Salad', 'value': 'Shrimp Salad'},
@@ -76,6 +80,7 @@ ingredients = [{'label': 'Zuni-Inspired Grilled Chicken Salad','value': 'Zuni-In
                {'label': 'Quinoa Salad', 'value': 'Quinoa Salad'}]
 
 
+# Estilo para cada uno de las hojas de los tabs creados
 tab_selected_style = {
     "background": "gray",
     'text-transform': 'uppercase',
@@ -92,6 +97,7 @@ tab_selected_style = {
 
 }
 
+# Estilo general del tab
 tab_style = {
     'color': 'rgb(136,136,136)',
     'font-size': '15px',
@@ -105,7 +111,7 @@ tab_style = {
 }
 
 
-
+# Se crea el diseño de la plantilla en general del dashboard
 app.layout= html.Div(
     children=[
         dbc.Container([
@@ -182,10 +188,10 @@ app.layout= html.Div(
         ),
         html.Div(id="tab-content", className="p-4", style = {'color' :'black',
                                                              'border-color':'black',
-                                                             'backgroundColor': 'white',#"rgb(136,136,136)",
+                                                             'backgroundColor': 'white',
                                                              'border-style':'solid',
                                                              'border-color':'gray',
-                                                            }),#BAB0ACcolors['background']
+                                                            }),
     ], ),],style = {'color' :'black','backgroundColor':colors['background']})
 
 @app.callback(
@@ -194,18 +200,17 @@ app.layout= html.Div(
     Input("store", "data")])
 def render_tab_content(active_tab, data):
     """
-    This callback takes the 'active_tab' property as input, as well as the
-    stored graphs, and renders the tab content depending on what the value of
-    'active_tab' is.
+    Esta función call back toma las propiedades de las pestañas como entradas, y toma la data de 
+    cada gráfica almacenada enviada por la función callback anterior " generate graph", 
+    dependiendo de la pestaña seleccionada despliega sus valores.
+    
     """
     if active_tab and data is not None:
         if active_tab == "ingredients":
-            #print("Se activa el envío de data[bar_1]")
             return (html.Div([dbc.Row([html.H3(str(data["label_food"]))]),
-                             dbc.Row([dbc.Col(html.Img(src = data["image"]), style = {'textAlign':'left'},), #width=4),
-                                      dbc.Col(children = data["card_cont1"] , style = {'textAlign':'center','padding':15}),#, width= 3),
-                                      dbc.Col(children = data["card_cont2"], style = {'textAlign':'center','padding': 15}),#, width= 3),
-                                      #dbc.Col( style = {'textAlign':'center','padding': 0}),
+                             dbc.Row([dbc.Col(html.Img(src = data["image"]), style = {'textAlign':'left'},),
+                                      dbc.Col(children = data["card_cont1"] , style = {'textAlign':'center','padding':15}),
+                                      dbc.Col(children = data["card_cont2"], style = {'textAlign':'center','padding': 15}),
                                       ],justify="left"),],
                             style = {'padding':10, 'flex':1, 'color':'#29A3A8', 'fontWeight':'bold'}), 
                     html.Div([html.H3(style={'color':"#29A3A8",'padding':25},children='Análisis por ingredientes'),
@@ -257,14 +262,14 @@ def render_tab_content(active_tab, data):
 
 def generate_graphs(value, data_dict):
     """
-    This callback generates three simple graphs from random data.
+    Esta función call back toma los datos de la función callback anterior y crea los objetos gráficos 
+    de los datos recibidos 
     """
-    #print('generate_graph:', value)
     
     if not data_dict:
         # generate empty graphs when app loads
         return {k: go.Figure(data=[]) if k not in 
-                ["image","label_food","card_cont1","card_cont2","card_cont3"] else "" 
+                ["image","label_food","card_cont1","card_cont2"] else "" 
                 for k in [
                     "bar_1",
                     "scatter_1", 
@@ -273,8 +278,7 @@ def generate_graphs(value, data_dict):
                     "image", 
                     "label_food", 
                     "card_cont1",
-                    "card_cont2",
-                    "card_cont3"]}
+                    "card_cont2",]}
     else:
         
         # Se importa tabla guída de nutrientes
@@ -289,7 +293,6 @@ def generate_graphs(value, data_dict):
         
         ################################################################################
         # Scatter Protein vs Energy
-        #fig_scatter = px.scatter(df_food_scatter, x="Protein", y="Energy", color="Food")
         fig_scatter = px.scatter_matrix(df_food_scatter, 
                                         dimensions=['Carbs', 'Protein', 'Fat','Fiber'], 
                                         color = "Food",height= 800)
@@ -299,9 +302,6 @@ def generate_graphs(value, data_dict):
             paper_bgcolor="LightSteelBlue",
             font = dict(size = 16),
             title = '<b>Relación nutricional entre alimentos</b>',
-            #font_color = "white",
-            #  {'plot_bgcolor':'rgba(0,0,0,0)',
-            #  'paper_bgcolor':'rgba(0,0,0,0)'}
             )
         fig_scatter.update_traces(diagonal_visible=False)
         ################################################################################
@@ -311,38 +311,36 @@ def generate_graphs(value, data_dict):
 
         
         ################################################################################
-        # Objeto bar_1 -> Gráfico de barras 
+        # Objeto bar_1 -> Gráfico de barras se asignan los valores para la "porción por ingrediente" de la receta
         fig_bar1 =  px.bar(food_sorted, x = 'weight', y = 'ingredient name', orientation='h', color = 'food')
         # Manipular el color del gráfico
         fig_bar1.update_layout(
              legend_title = "Ingredientes",
-             paper_bgcolor="LightSteelBlue"
-            #  {'plot_bgcolor':'rgba(0,0,0,0)',
-            #  'paper_bgcolor':'rgba(0,0,0,0)'}
+             paper_bgcolor="LightSteelBlue",
             )
+        # Se actualizan las propiedades y etiquetas del eje x 
         fig_bar1.update_xaxes(title='<b>Peso, g</b>', visible=True, showticklabels=False)
         fig_bar1.update_layout(uniformtext_minsize=8, 
                                uniformtext_mode='hide', 
                                title = '<b>Porción por ingrediente</b>',
                                font = dict(size = 14))
-        # Set the visibility ON
+        # Se activa la visibilidad en las etiquetas de los ejes y se define la etiqueta del eje y
         fig_bar1.update_yaxes(title='<b>Ingredientes</b>', visible=True, showticklabels=False)
     
         ################################################################################
-        # Objeto bar_2 -> Gráfico de barras 
-        
-        fig_bar2 = px.bar(df_food_nut, x = "Food", y = ['Carbs', 'Protein', 'Fat','Fiber'])#,width = 1250,height= 450)#, color = 'Food')
+        # Objeto bar_2 -> Gráfico de barras en donde se asignan como valores 
+        fig_bar2 = px.bar(df_food_nut, x = "Food", y = ['Carbs', 'Protein', 'Fat','Fiber'])
         fig_bar2.update_layout(
             legend_title = "Nutrientes",
             paper_bgcolor="LightSteelBlue")
         
         fig_bar2.update_layout(uniformtext_minsize=8, uniformtext_mode='hide', font = dict(size = 14))
-        # Set the visibility ON
+        # Se activa la visibilidad en las etiquetas de los ejes
         fig_bar2.update_xaxes(title='<b>Alimentos</b>', visible=True, showticklabels=False)
         fig_bar2.update_yaxes(title='<b>Valor, g</b>', visible=True, showticklabels=True)
         
         ################################################################################
-        # Objeto bar_3 -> Gráfico de barras 
+        # Objeto bar_3 -> Gráfico de barras de los nutrientes por alimento
         fig_bar3 = px.bar(df_TNut,x= 'label', y = value, color ='label')
         fig_bar3.update_traces(texttemplate='%{text:.2s}', textposition='outside')
         fig_bar3.update_layout(title= "<b>Total Diario</b>" ,
@@ -351,10 +349,11 @@ def generate_graphs(value, data_dict):
                                legend_title = 'Nutrientes',
                                paper_bgcolor="LightSteelBlue",
                                font = dict(size = 14))
-        # Set the visibility ON
+        # Se activa la visibilidad en las etiquetas de los ejes
         fig_bar3.update_xaxes(title='<b>Nutrientes</b>', visible=True, showticklabels=False)
 
         ################################################################################
+        # Se define el path de la imagen del alimento seleccionado
         image_url = df_image.loc[value,"image"]
         
         # Resumen Receta calories
@@ -362,6 +361,7 @@ def generate_graphs(value, data_dict):
         totalWeight = df_summary.loc[value,'totalWeight']
         totalTime = df_summary.loc[value, 'totalTime']
         
+        # Se asigan los valores de calorías y peso total por ingrediente en las tarjetas
         card_content_cal = dbc.Card([dbc.CardHeader("CALORÍAS, cal"), 
                                  dbc.CardBody(
                                      [
@@ -376,14 +376,8 @@ def generate_graphs(value, data_dict):
                                          ]),
                                  ],color ="primary", outline = True, )#style = {"width":"18rem"})
         
-        card_content_Time = dbc.Card([dbc.CardHeader("TIEMPO TOTAL"), 
-                                 dbc.CardBody(
-                                     [
-                                         html.H5(str(round(totalTime,2)), className="card-title"),
-                                         ]),
-                                 ],color ="primary", outline = True)
         
-
+        # se crean variable diccionario con los valores de los objeetos gráficos y tarjetas.
         graph_dicts = {"bar_1": fig_bar1, 
                        "scatter_1": fig_scatter, 
                        "comparison": fig_bar2, 
@@ -392,12 +386,10 @@ def generate_graphs(value, data_dict):
                        "label_food": value,
                        "card_cont1": card_content_cal,
                        "card_cont2": card_content_weight,
-                       "card_cont3": card_content_Time,
                        "Nut_guid":data_Nut.to_dict()
                        }
-        
-        #print(graph_dicts)
-        # save figures in a dictionary for sending to the dcc.Store
+
+        # Se guardan los objettos graficos en un diccionario y se envían a dcc.store 
         return graph_dicts
 
 
@@ -406,6 +398,10 @@ def generate_graphs(value, data_dict):
               [Input("button", "n_clicks"), 
               Input("string_contr", "value")]) 
 def query_Edamam(n, value):
+    """
+    Esta función realiza las consultas a la API de Recipe Search de EDAMAM y obtiene los dataframes
+    procesados, el retorno de la función es una variable de tipo diccionario que se almacenda en dcc.store2
+    """
     
     ctx = dash.callback_context
     print(value, "Si funciona")
@@ -415,11 +411,10 @@ def query_Edamam(n, value):
         # Ejercución de los métodos de cada una de las API's para realizar consultas
         EDAMAM_consulta.Search_recipe(query= value)
 
-        # Ejecución de los métodos para obtener los dataframe con los resultados para cada una de las API's
-        #EDAMAM_consulta.Nutrient_Guide()
+        # Ejecución del metodo para genrar las tablas (dataframe) con la información requerida por los gráficos 
         EDAMAM_consulta.ingredients_table()
-        #EDAMAM_consulta.food_table()
         
+        # Se asignan los valores regresados por las instancias de la clase EDMAM_mcd
         food = EDAMAM_consulta.df_Recipe.reset_index()
         list_ingredients = EDAMAM_consulta.ingredients
         df_food_nut = EDAMAM_consulta.df_food_nut
@@ -430,6 +425,7 @@ def query_Edamam(n, value):
         # Recipe summary
         df_summary = EDAMAM_consulta.summary_r
         
+        # Se define variable de tipo diccionario con los valores de los dataframes convertidos a tipo de dato dict
         df_dicts ={"food":food.to_dict() ,
                    "df_food_nut":df_food_nut.to_dict(), 
                    "df_food_scatter":df_food_scatter.to_dict(),
@@ -439,7 +435,6 @@ def query_Edamam(n, value):
                    }
        
         options_list = [{"label": element, "value":element} for element in list_ingredients]
-        #df_json = json.dumps(df_dicts, indent = 3)
   
         return df_dicts, options_list
         
@@ -457,10 +452,9 @@ def query_Edamam(n, value):
                       {'label': 'Buffalo Chicken Salad recipes','value': 'Buffalo Chicken Salad recipes'},
                       {'label': 'Washing up free salad', 'value': 'Washing up free salad'},
                       {'label': 'Quinoa Salad', 'value': 'Quinoa Salad'}]
-        #list_ingredients = []
+
         return df_dicts, ingred_non
         
-        #df_dicts = {"bar_1":[1,2,3,4]}
 
 if __name__ == "__main__":
     #from waitress import serve
